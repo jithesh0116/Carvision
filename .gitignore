@@ -1,17 +1,36 @@
+# Environment and secrets
 .env
+.env.*
+!.env.example
+
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
 .venv/
 venv/
 .ipynb_checkpoints/
+.pytest_cache/
+
+# Browser profiles and temporary files
+scratch/
+edge_profile/
+edge_temp_profile/
+
+# Raw datasets
 data/raw/*
 !data/raw/.gitkeep
 !data/raw/images/
 data/raw/images/*
 !data/raw/images/.gitkeep
+
+# Processed datasets
 data/processed/*
 !data/processed/.gitkeep
+
+# Trained models
 ml/models/*
 !ml/models/.gitkeep
+
+# Uploaded images
 static/uploads/*
 !static/uploads/.gitkeep
