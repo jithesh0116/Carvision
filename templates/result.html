@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% from "_stepper.html" import stepper %}
+{% block title %}Your Estimate · CarVision{% endblock %}
+{% block content %}
+{% set v = r.vehicle %}{% set p = r.price %}
+<div class="container narrow">
+  {{ stepper(4) }}
+
+  <section class="value-card" aria-labelledby="value-h">
+    <p class="eyebrow-light" id="value-h">YOUR ESTIMATED VEHICLE VALUE</p>
+    <p class="value">{{ p.estimate|money }}</p>
+    <p class="range-label">Estimated Price Range</p>
+    <p class="range">{{ p.lower|money }} – {{ p.upper|money }}</p>
+    {% if p.nominal_coverage %}
+    <p class="value-note">This range is a {{ (p.nominal_coverage * 100)|round|int }}% prediction interval from conformal prediction, calibrated on vehicles the model never saw during training{% if p.empirical_coverage is not none %}; on a separate test set it contained the true price for {{ (p.empirical_coverage * 100)|round(1) }}% of vehicles{% endif %}.</p>
+    {% endif %}
+  </section>
+
+  <p class="disclaimer">This is an AI-generated estimate based on available vehicle data. Actual selling prices may vary depending on vehicle condition, local market demand, negotiation, and other factors.</p>
+
+  {% if r.warnings %}
+  <div class="alert alert-warn">{% for w in r.warnings %}<p>{{ w }}</p>{% endfor %}</div>
+  {% endif %}
+
+  <section class="card">
+    <h2>Your Vehicle</h2>
+    {% if r.image %}<img class="car-photo" src="{{ url_for('static', filename='uploads/' ~ r.image) }}" alt="Your uploaded car photo">{% endif %}
+    <p class="vehicle-title">{{ v.brand }} {{ v.model }}{% if v.variant %} {{ v.variant }}{% endif %}</p>
+    <p class="muted">{{ [v.year, v.fuel_type, v.transmission]|select|join(' • ') }}{% if v.km_driven is not none %} • {{ '{:,}'.format(v.km_driven) }} km{% endif %}</p>
+    <div class="stats">
+      <div class="stat"><span>Vehicle Age</span><b>{% if v.age_years == 0 %}Under 1 year{% else %}{{ v.age_years }} Year{{ 's' if v.age_years != 1 }}{% endif %}</b></div>
+      {% if v.owner_count is not none %}<div class="stat"><span>Previous Owners</span><b>{{ v.owner_count }}</b></div>{% endif %}
+      {% if v.mileage is not none %}<div class="stat"><span>Mileage</span><b>{{ v.mileage }} km/l</b></div>{% endif %}
+      {% if v.engine_cc is not none %}<div class="stat"><span>Engine</span><b>{{ v.engine_cc|round|int }} cc</b></div>{% endif %}
+      {% if v.location %}<div class="stat"><span>Location</span><b>{{ v.location }}</b></div>{% endif %}
+      {% if v.vehicle_condition %}<div class="stat"><span>Condition</span><b>{{ v.vehicle_condition }}</b></div>{% endif %}
+    </div>
+  </section>
+
+  {% if r.depreciation %}
+  <section class="card">
+    <h2>Estimated Depreciation</h2>
+    <p class="big-number">{{ r.depreciation.percent }}%</p>
+    <p class="muted">{{ r.depreciation.explanation }} Reference original price: {{ r.depreciation.reference_price|money }}.</p>
+  </section>
+  {% endif %}
+
+  <section class="card">
+    <h2>What affects your car's value?</h2>
+    {% set items = r.explanation.local or r.explanation.overall %}
+    <p>{{ r.explanation.summary }}</p>
+    {% if items %}
+    <ul class="factors">
+      {% for i in items %}
+      <li>
+        <div class="factor-head"><span>{{ i.label }}</span>
+          {% if i.direction is defined %}<span class="tag tag-{{ i.direction }}">{% if i.direction == 'up' %}↑ raises value{% elif i.direction == 'down' %}↓ lowers value{% else %}≈ neutral{% endif %} ({{ '%+.0f'|format(i.effect_pct) }}%)</span>{% endif %}
+        </div>
+        <div class="bar" role="img" aria-label="{{ i.label }}: {{ i.share }} percent"><i style="width: {{ [i.share, 100]|min }}%"></i></div>
+      </li>
+      {% endfor %}
+    </ul>
+    <p class="muted small">
+      {% if r.explanation.local %}Bars show each factor's share of this estimate's total push up or down; percentages are the approximate effect compared with an average car in the training data (exact tree SHAP values from the model).
+      {% else %}Bars show each factor's share of the model's overall importance (XGBoost gain).{% endif %}
+    </p>
+    {% endif %}
+  </section>
+
+  <details class="card tech">
+    <summary>About this estimate</summary>
+    {% set m = r.model %}
+    {% if m.MAE is not none %}
+    <p class="muted">The price model was evaluated on {{ '{:,}'.format(m.n_test) }} test vehicles it never trained on:
+      average error (MAE) {{ m.MAE|money }}, RMSE {{ m.RMSE|money }}, R² {{ m.R2 }}.</p>
+    {% endif %}
+    <p class="muted">
+      {% if m.image_used_for_price %}Image features are used by the price model.{% else %}Your photo is used only for vehicle recognition; the price is based on the vehicle details.{% endif %}
+      The estimate reflects the market period covered by the dataset the model was trained on{% if m.trained_at %} (model trained {{ m.trained_at[:10] }}){% endif %}.</p>
+  </details>
+
+  <div class="actions">
+    <a class="btn btn-ghost-dark" href="{{ url_for('pages.history_page') }}">View History</a>
+    <a class="btn btn-primary" href="{{ url_for('pages.predict_page') }}">Estimate Another Car</a>
+  </div>
+</div>
+{% endblock %}

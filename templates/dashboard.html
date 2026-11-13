@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Dashboard · CarVision{% endblock %}
+{% block content %}
+<div class="container">
+  <h1 class="page-title">Dashboard</h1>
+  <div id="dash" aria-live="polite"><p class="muted">Loading…</p></div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+(async function () {
+  const el = document.getElementById('dash');
+  const d = await CV_API('/api/dashboard');
+  if (!d.ok) { el.innerHTML = '<div class="alert alert-warn">' + esc(d.error) + '</div>'; return; }
+  const max = Math.max(1, ...d.brand_counts.map(b => b.count));
+  const model = d.model ? '<div class="card"><h2>Price model quality</h2><p class="muted small">Measured on ' + d.model.n_test.toLocaleString() +
+      ' held-out test vehicles.</p><div class="stats"><div class="stat"><span>MAE</span><b>' + fmtMoney(d.model.MAE) + '</b></div><div class="stat"><span>RMSE</span><b>' +
+      fmtMoney(d.model.RMSE) + '</b></div><div class="stat"><span>R²</span><b>' + d.model.R2 + '</b></div>' +
+      (d.model.interval_coverage != null ? '<div class="stat"><span>Range coverage</span><b>' + (d.model.interval_coverage * 100).toFixed(1) + '%</b></div>' : '') + '</div></div>'
+      : '<div class="card"><h2>Price model quality</h2><p class="muted">The price model has not been trained yet.</p></div>';
+  el.innerHTML =
+    '<div class="grid grid-3">' +
+      '<div class="card stat-card"><span>Total Predictions</span><b>' + d.total_predictions + '</b></div>' +
+      '<div class="card stat-card"><span>Average Estimated Value</span><b>' + (d.average_value != null ? fmtMoney(d.average_value) : '—') + '</b></div>' +
+      '<div class="card stat-card"><span>Most Selected Brand</span><b>' + esc(d.top_brand || '—') + '</b></div></div>' +
+    '<div class="grid grid-2">' +
+      '<div class="card"><h2>Brands you estimated</h2>' + (d.brand_counts.length ? '<ul class="factors">' + d.brand_counts.map(b =>
+        '<li><div class="factor-head"><span>' + esc(b.brand) + '</span><span>' + b.count + '</span></div><div class="bar"><i style="width:' + (100 * b.count / max) + '%"></i></div></li>').join('') + '</ul>'
+        : '<p class="muted">No predictions yet.</p>') + '</div>' +
+      '<div class="card"><h2>Recent Predictions</h2>' + (d.recent.length ? '<ul class="recent">' + d.recent.map(r =>
+        '<li><a href="/result/' + r.id + '"><span>' + esc(r.brand + ' ' + r.model + (r.variant ? ' ' + r.variant : '')) + ' · ' + r.year + '</span><b>' + fmtMoney(r.predicted_price) + '</b></a></li>').join('') + '</ul>'
+        : '<p class="muted">No predictions yet.</p>') + '</div></div>' +
+    '<div class="grid grid-2">' + model +
+      '<div class="card"><h2>Vehicle data</h2><div class="stats"><div class="stat"><span>Vehicles</span><b>' + d.dataset.vehicles.toLocaleString() +
+      '</b></div><div class="stat"><span>Brands</span><b>' + d.dataset.brands + '</b></div></div>' +
+      (d.cnn ? '<p class="muted small">Image recognition: top-1 accuracy ' + (d.cnn.test_top1_accuracy * 100).toFixed(1) + '% on ' + d.cnn.n_test.toLocaleString() + ' test images (' + d.cnn.n_classes + ' classes).</p>' : '') + '</div></div>';
+})();
+</script>
+{% endblock %}

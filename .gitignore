@@ -1,0 +1,17 @@
+.env
+__pycache__/
+*.pyc
+.venv/
+venv/
+.ipynb_checkpoints/
+data/raw/*
+!data/raw/.gitkeep
+!data/raw/images/
+data/raw/images/*
+!data/raw/images/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+ml/models/*
+!ml/models/.gitkeep
+static/uploads/*
+!static/uploads/.gitkeep

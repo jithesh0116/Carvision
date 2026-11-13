@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} · CarVision{% endblock %}
+{% block content %}
+<div class="container narrow"><div class="card empty">
+  <h1>{{ title }}</h1><p class="muted">{{ message }}</p>
+  <a class="btn btn-primary" href="{{ url_for('pages.index') }}">Back to Home</a>
+</div></div>
+{% endblock %}

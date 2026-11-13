@@ -1,0 +1,3 @@
+# Optional: image recognition (train_cnn.py and the "AI detected" feature).
+# The web app and price prediction work without this file's packages.
+tensorflow>=2.15

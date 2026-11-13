@@ -1,0 +1,14 @@
+{% macro stepper(current) %}
+<nav class="stepper" aria-label="Progress">
+  <ol>
+    {% for label in ["Car Image", "Car Details", "Vehicle Information", "Result"] %}
+    {% set n = loop.index %}
+    <li class="step {{ 'done' if n < current else ('active' if n == current else '') }}" data-step="{{ n }}"
+        {% if n == current %}aria-current="step"{% endif %}>
+      <span class="step-dot">{% if n < current %}✓{% else %}{{ n }}{% endif %}</span>
+      <span class="step-label">{{ label }}</span>
+    </li>
+    {% endfor %}
+  </ol>
+</nav>
+{% endmacro %}

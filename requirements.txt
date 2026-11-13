@@ -1,0 +1,15 @@
+# Web app + database
+Flask>=3.0
+PyMySQL>=1.1
+cryptography>=42.0        # needed by PyMySQL for MySQL 8 authentication
+python-dotenv>=1.0
+Pillow>=10.0
+
+# Data + price model (required for price prediction)
+numpy>=1.26
+pandas>=2.0
+scikit-learn>=1.3
+xgboost>=2.0
+
+# Tests
+pytest>=8.0
